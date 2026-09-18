@@ -130,6 +130,19 @@
 
   .shop{border:3px solid var(--ink);background:var(--court);padding:10px 12px;display:none;flex-direction:column;gap:8px}
   .shop.open{display:flex}
+  .shop.archive{background:var(--ink);border-color:var(--ink)}
+  .shop.archive h3{color:#fff}
+  .shop.archive small{color:#999}
+  .shop.archive .cta-row{gap:6px}
+  .shop.archive a{flex:1 1 auto;min-width:0;background:#242424;border-color:#3a3a3a;font-size:11px;padding:9px 6px}
+  .shop.archive a:hover{background:var(--orange);border-color:var(--orange)}
+  .shop.archive a.tee{background:var(--orange);border-color:var(--orange);flex-basis:100%}
+  .recap{border:3px solid var(--ink);background:#fff;padding:11px 12px;display:none;flex-direction:column;gap:7px}
+  .recap.open{display:flex}
+  .recap h3{font-family:var(--display);font-size:15px;letter-spacing:1.5px;text-transform:uppercase}
+  .recap h3 span{color:var(--orange)}
+  .recap-fact{font-size:12.5px;line-height:1.5;color:#444;background:var(--court);border-left:4px solid var(--orange);padding:8px 10px}
+  .recap button{align-self:flex-start}
   .shop h3{font-family:var(--display);font-size:14px;letter-spacing:1.5px;text-transform:uppercase}
   .shop h3 span{color:var(--orange)}
   .shop .cta-row{display:flex;gap:8px}
@@ -279,10 +292,17 @@
       <p class="run-note" id="streakNote">Just play each new cover while it's live — right or wrong — and your streak grows. Rewards are for showing up.</p>
     </section>
 
-    <section class="shop" id="archiveBox" style="background:var(--ink);border-color:var(--ink)">
+    <section class="shop open archive" id="archiveBox">
       <h3 style="color:#fff">Want more covers? <span>Play the archive.</span></h3>
       <div class="cta-row" id="archiveRow"></div>
       <small style="color:#999">Archive plays don't affect your streak</small>
+    </section>
+
+    <section class="recap" id="recapBox" aria-label="This cover's recap">
+      <h3>The Cover: <span id="recapName"></span></h3>
+      <p class="recap-fact" id="recapFact"></p>
+      <div id="recapDist"></div>
+      <button class="small ghost" id="recapShare">Share result</button>
     </section>
 
     <section class="shop" id="shopBox" aria-label="Today-only shop links">
@@ -406,7 +426,7 @@
 </div>
 
 <details class="dev">
-  <summary>Prototype controls · BUILD V12 · Supabase accounts · 3 curated covers</summary>
+  <summary>Prototype controls · BUILD V14 · persistent recap · 3 curated covers</summary>
   <p>One cover per WEEK (drops Monday ET), same for everyone, no repeats until the archive cycles — switch CADENCE.mode in the code to daily or nba (season windows configurable). Production: real SLAM accounts, server-side answers/points, signed day-tokens on shop links, ID verification at platinum redemption.</p>
   <div class="btns">
     <label><input type="file" id="importFile" accept=".json" hidden>
@@ -812,6 +832,14 @@ async function renderAll(){
     log.appendChild(d);
   });
 
+  const recap = $("recapBox");
+  if(cover && S.done){
+    recap.classList.add("open");
+    $("recapName").textContent = cover.name;
+    $("recapFact").innerHTML = cover.fact ? `<b>The story:</b> ${cover.fact}` : "";
+    $("recapDist").innerHTML = distHTML();
+  }else recap.classList.remove("open");
+
   const shop = $("shopBox");
   if(cover && S.done){
     shop.classList.add("open");
@@ -830,6 +858,7 @@ async function renderAll(){
   $("streakNote").innerHTML = `Play each new cover while it's live — right or wrong — and your streak grows. <b>${Math.max(0, nextR.at - S.streak)}</b> more to unlock <b>${nextR.name}</b>.`;
 
   // archive row
+  $("archiveBox").classList.add("open");
   const ar = $("archiveRow"); ar.innerHTML = "";
   const liveId = (COVERS.length ? COVERS[permutation(COVERS.length,1994)[((periodIndex()%COVERS.length)+COVERS.length)%COVERS.length]].id : null);
   COVERS.forEach((c,i)=>{
@@ -1325,6 +1354,7 @@ async function resetAll(){
     $("profileOverlay").classList.remove("open"); renderAll(); toast("Signed out");
   });
   $("shareBtn").addEventListener("click", copyShare);
+  $("recapShare").addEventListener("click", copyShare);
   $("devNextDay").addEventListener("click", nextDay);
   $("devReset").addEventListener("click", resetAll);
   $("devClear").addEventListener("click", clearDataset);
